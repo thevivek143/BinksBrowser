@@ -1,0 +1,17 @@
+.loadingBar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  z-index: 9999;
+  background: transparent;
+}
+
+.progress {
+  height: 100%;
+  background: var(--brand-gradient);
+  border-radius: 0 2px 2px 0;
+  transition: width 0.3s ease;
+  box-shadow: 0 0 10px rgba(108,99,255,0.6);
+}

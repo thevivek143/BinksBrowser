@@ -1,0 +1,115 @@
+{
+  "name": "binksbrowser",
+  "version": "1.0.0",
+  "private": true,
+  "description": "BinksBrowser — Next-Gen Advanced Browser",
+  "author": "BinksBrowser Team",
+  "main": "electron/dist/main.js",
+  "scripts": {
+    "dev": "cross-env NODE_OPTIONS=--max-old-space-size=4096 next dev",
+    "build": "next build",
+    "build:export": "cross-env NEXT_EXPORT=true next build",
+    "start": "next start",
+    "lint": "eslint",
+    "electron:compile": "tsc -p electron/tsconfig.json",
+    "electron:dev": "concurrently --kill-others \"npm run dev\" \"wait-on http://localhost:3000 && electron .\"",
+    "electron:build": "npm run build:export && npm run electron:compile && electron-builder --win",
+    "electron:build:mac": "npm run build:export && npm run electron:compile && electron-builder --mac",
+    "electron:build:linux": "npm run build:export && npm run electron:compile && electron-builder --linux",
+    "cap:init": "npx cap init BinksBrowser com.binks.browser --web-dir out",
+    "cap:add:android": "npx cap add android",
+    "cap:sync": "npm run build:export && npx cap sync android",
+    "cap:build:android": "npm run cap:sync && npx cap build android",
+    "cap:open:android": "npx cap open android"
+  },
+  "dependencies": {
+    "@ghostery/adblocker-electron": "^2.14.3",
+    "cross-fetch": "^4.1.0",
+    "lucide-react": "^1.11.0",
+    "next": "16.2.4",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "zustand": "^5.0.12"
+  },
+  "devDependencies": {
+    "@capacitor/android": "^7.6.2",
+    "@capacitor/cli": "^7.6.2",
+    "@capacitor/core": "^7.6.2",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "concurrently": "^9.2.1",
+    "cross-env": "^7.0.3",
+    "electron": "^35.7.5",
+    "electron-builder": "^25.1.8",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.4",
+    "typescript": "^5",
+    "wait-on": "^8.0.5"
+  },
+  "build": {
+    "appId": "com.binks.browser",
+    "productName": "BinksBrowser",
+    "copyright": "Copyright © 2026 BinksBrowser",
+    "directories": {
+      "output": "dist-electron",
+      "buildResources": "public"
+    },
+    "files": [
+      "out/**/*",
+      "electron/dist/**/*",
+      "public/**/*",
+      "!public/*.sketch",
+      "!**/*.map"
+    ],
+    "extraMetadata": {
+      "main": "electron/dist/main.js"
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "public/icon.ico",
+      "requestedExecutionLevel": "asInvoker",
+      "executableName": "BinksBrowser",
+      "artifactName": "BinksBrowser Setup ${version}.exe"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "BinksBrowser",
+      "installerIcon": "public/icon.ico",
+      "uninstallerIcon": "public/icon.ico"
+    },
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ],
+      "icon": "public/icon.png",
+      "category": "public.app-category.productivity"
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "icon": "public/icon.ico",
+      "category": "Network;WebBrowser"
+    },
+    "publish": null
+  }
+}

@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">BinksBrowser</string>
+    <string name="title_activity_main">BinksBrowser</string>
+    <string name="package_name">com.binks.browser</string>
+    <string name="custom_url_scheme">com.binks.browser</string>
+</resources>

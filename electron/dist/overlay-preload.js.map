@@ -1,0 +1,1 @@
+{"version":3,"file":"overlay-preload.js","sourceRoot":"","sources":["../overlay-preload.ts"],"names":[],"mappings":";;AAAA,uCAAsD;AAEtD,wBAAa,CAAC,iBAAiB,CAAC,cAAc,EAAE;IAC9C,aAAa,EAAE,CAAC,IAA6D,EAAE,EAAE,CAC/E,sBAAW,CAAC,IAAI,CAAC,sBAAsB,EAAE,IAAI,CAAC;IAChD,MAAM,EAAE,GAAG,EAAE,CAAC,sBAAW,CAAC,IAAI,CAAC,eAAe,CAAC;CAChD,CAAC,CAAC"}

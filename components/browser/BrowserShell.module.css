@@ -1,0 +1,63 @@
+.shell {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+  background-color: #0B0A15;
+  background-image: 
+    radial-gradient(circle at 15% 50%, rgba(108, 99, 255, 0.12), transparent 40%),
+    radial-gradient(circle at 85% 30%, rgba(78, 205, 196, 0.12), transparent 40%),
+    radial-gradient(circle at 50% 80%, rgba(255, 107, 157, 0.08), transparent 40%);
+  overflow: hidden;
+  position: relative;
+}
+
+.layout {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.main {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+  min-width: 0;
+}
+
+.toolbarRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: rgba(10, 10, 15, 0.45);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  flex-shrink: 0;
+}
+
+.contentRow {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+
+.focusMode .toolbarRow {
+  opacity: 0;
+  pointer-events: none;
+  height: 0;
+  padding: 0;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.focusMode:hover .toolbarRow {
+  opacity: 1;
+  pointer-events: all;
+  height: auto;
+  padding: 6px 12px;
+}

@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Snip Region</title>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      width: 100vw; height: 100vh;
+      overflow: hidden;
+      background: transparent;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    /* Dim overlay — four surrounding panels leave the selection clear */
+    #dim-tl, #dim-tr, #dim-bl, #dim-br {
+      position: fixed;
+      background: rgba(0, 0, 0, 0.48);
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* Crosshair lines */
+    #cross-h, #cross-v {
+      position: fixed;
+      background: rgba(255,255,255,0.25);
+      pointer-events: none;
+      z-index: 2;
+    }
+    #cross-h { height: 1px; left: 0; right: 0; }
+    #cross-v { width: 1px;  top: 0; bottom: 0; }
+
+    /* Selection box */
+    #sel {
+      position: fixed;
+      border: 2px solid #6C63FF;
+      z-index: 10;
+      display: none;
+      box-shadow:
+        0 0 0 1px rgba(108,99,255,0.4),
+        inset 0 0 0 1px rgba(108,99,255,0.15);
+    }
+
+    /* Corner handles */
+    .handle {
+      position: absolute;
+      width: 10px; height: 10px;
+      background: #ffffff;
+      border: 2px solid #6C63FF;
+      border-radius: 50%;
+    }
+    .tl { top:-5px;  left:-5px;  }
+    .tr { top:-5px;  right:-5px; }
+    .bl { bottom:-5px; left:-5px;  }
+    .br { bottom:-5px; right:-5px; }
+
+    /* Dimension badge */
+    #dims {
+      position: fixed;
+      background: rgba(0,0,0,0.82);
+      color: #fff;
+      font: 600 12px/1 'Segoe UI', system-ui, sans-serif;
+      padding: 5px 10px;
+      border-radius: 14px;
+      pointer-events: none;
+      z-index: 20;
+      white-space: nowrap;
+      opacity: 0;
+      transition: opacity 0.1s;
+    }
+
+    /* Toolbar shown after draw */
+    #toolbar {
+      position: fixed;
+      display: none;
+      align-items: center;
+      gap: 8px;
+      background: rgba(18, 16, 32, 0.92);
+      border: 1px solid rgba(108,99,255,0.4);
+      border-radius: 12px;
+      padding: 8px 12px;
+      backdrop-filter: blur(12px);
+      z-index: 30;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+    }
+    #toolbar button {
+      display: flex; align-items: center; gap: 6px;
+      background: none; border: none; cursor: pointer;
+      color: #fff; font: 500 13px 'Segoe UI', system-ui, sans-serif;
+      padding: 7px 14px;
+      border-radius: 8px;
+      transition: background 0.15s;
+      white-space: nowrap;
+    }
+    #toolbar button:hover { background: rgba(255,255,255,0.1); }
+    #toolbar button.primary {
+      background: #6C63FF;
+    }
+    #toolbar button.primary:hover { background: #574fd6; }
+    #toolbar button.danger { color: #f87171; }
+    #toolbar .sep { width: 1px; height: 22px; background: rgba(255,255,255,0.15); }
+
+    /* Bottom hint */
+    #hint {
+      position: fixed;
+      bottom: 28px; left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,0.78);
+      color: rgba(255,255,255,0.85);
+      font: 13px 'Segoe UI', system-ui, sans-serif;
+      padding: 9px 20px;
+      border-radius: 24px;
+      pointer-events: none;
+      z-index: 5;
+      white-space: nowrap;
+    }
+
+    body { cursor: crosshair; }
+  </style>
+</head>
+<body>
+  <!-- Dim panels -->
+  <div id="dim-tl"></div>
+  <div id="dim-tr"></div>
+  <div id="dim-bl"></div>
+  <div id="dim-br"></div>
+
+  <!-- Crosshair -->
+  <div id="cross-h"></div>
+  <div id="cross-v"></div>
+
+  <!-- Selection -->
+  <div id="sel">
+    <div class="handle tl"></div>
+    <div class="handle tr"></div>
+    <div class="handle bl"></div>
+    <div class="handle br"></div>
+  </div>
+
+  <!-- Dimension badge -->
+  <div id="dims">0 × 0</div>
+
+  <!-- Action toolbar -->
+  <div id="toolbar">
+    <button class="primary" id="btn-capture">📷 Capture</button>
+    <div class="sep"></div>
+    <button id="btn-copy">📋 Copy</button>
+    <div class="sep"></div>
+    <button class="danger" id="btn-cancel">✕ Cancel</button>
+  </div>
+
+  <!-- Hint -->
+  <div id="hint">✦ Click and drag to select region &nbsp;·&nbsp; Esc to cancel</div>
+
+  <script>
+    const sel    = document.getElementById('sel');
+    const dims   = document.getElementById('dims');
+    const toolbar = document.getElementById('toolbar');
+    const crossH = document.getElementById('cross-h');
+    const crossV = document.getElementById('cross-v');
+    const dimTL  = document.getElementById('dim-tl');
+    const dimTR  = document.getElementById('dim-tr');
+    const dimBL  = document.getElementById('dim-bl');
+    const dimBR  = document.getElementById('dim-br');
+    const hint   = document.getElementById('hint');
+
+    let startX = 0, startY = 0, drawing = false;
+    let rect = { x: 0, y: 0, width: 0, height: 0 };
+
+    function updateDim(x, y, w, h) {
+      const W = window.innerWidth, H = window.innerHeight;
+      // Four dim panels (top-left, top-right, bottom-left, bottom-right)
+      Object.assign(dimTL.style, { left: '0', top: '0', width: x+'px', height: (y+h)+'px' });
+      Object.assign(dimTR.style, { left: (x+w)+'px', top: '0', width: (W-x-w)+'px', height: (y+h)+'px' });
+      Object.assign(dimBL.style, { left: '0', top: (y)+'px', width: x+'px', height: (H-y)+'px' });
+      Object.assign(dimBR.style, { left: (x+w)+'px', top: (y)+'px', width: (W-x-w)+'px', height: (H-y)+'px' });
+    }
+
+    // Fill dim initially
+    Object.assign(dimTL.style, { left: '0', top: '0', width: '100vw', height: '100vh' });
+
+    // Track mouse for crosshair
+    document.addEventListener('mousemove', e => {
+      if (!drawing) {
+        crossH.style.top  = e.clientY + 'px';
+        crossV.style.left = e.clientX + 'px';
+      }
+    });
+
+    document.addEventListener('mousedown', e => {
+      if (e.button !== 0) return;
+      startX = e.clientX; startY = e.clientY;
+      drawing = true;
+      sel.style.display = 'block';
+      toolbar.style.display = 'none';
+      hint.style.display = 'none';
+      crossH.style.display = 'none';
+      crossV.style.display = 'none';
+      dims.style.opacity = '1';
+
+      rect = { x: startX, y: startY, width: 0, height: 0 };
+      sel.style.left = startX + 'px';
+      sel.style.top  = startY + 'px';
+      sel.style.width  = '0px';
+      sel.style.height = '0px';
+    });
+
+    document.addEventListener('mousemove', e => {
+      if (!drawing) return;
+
+      const x = Math.min(e.clientX, startX);
+      const y = Math.min(e.clientY, startY);
+      const w = Math.abs(e.clientX - startX);
+      const h = Math.abs(e.clientY - startY);
+
+      sel.style.left   = x + 'px';
+      sel.style.top    = y + 'px';
+      sel.style.width  = w + 'px';
+      sel.style.height = h + 'px';
+
+      dims.textContent = w + ' × ' + h + ' px';
+      dims.style.left = (x + w / 2 - dims.offsetWidth / 2) + 'px';
+      dims.style.top  = (y - 28) + 'px';
+      if (y < 32) dims.style.top = (y + h + 8) + 'px';
+
+      updateDim(x, y, w, h);
+      rect = { x, y, width: w, height: h };
+    });
+
+    document.addEventListener('mouseup', () => {
+      if (!drawing) return;
+      drawing = false;
+
+      if (rect.width < 10 || rect.height < 10) {
+        // Too small – reset
+        sel.style.display = 'none';
+        dims.style.opacity = '0';
+        crossH.style.display = 'block';
+        crossV.style.display = 'block';
+        hint.style.display = 'block';
+        Object.assign(dimTL.style, { left:'0', top:'0', width:'100vw', height:'100vh' });
+        dimTR.style.width = '0'; dimBL.style.width = '0'; dimBR.style.width = '0';
+        return;
+      }
+
+      // Show toolbar below selection (or above if near bottom)
+      const tbH = 52;
+      const tbW = 280;
+      const tbX = Math.max(0, Math.min(rect.x + rect.width / 2 - tbW / 2, window.innerWidth - tbW));
+      let tbY = rect.y + rect.height + 10;
+      if (tbY + tbH > window.innerHeight - 10) tbY = rect.y - tbH - 10;
+
+      toolbar.style.display = 'flex';
+      toolbar.style.left = tbX + 'px';
+      toolbar.style.top  = tbY + 'px';
+      dims.style.opacity = '0';
+    });
+
+    // Action buttons
+    document.getElementById('btn-capture').addEventListener('click', () => {
+      toolbar.style.display = 'none';
+      window.electronSnip?.captureRegion(rect);
+    });
+
+    document.getElementById('btn-copy').addEventListener('click', () => {
+      toolbar.style.display = 'none';
+      window.electronSnip?.captureRegion({ ...rect, copyOnly: true });
+    });
+
+    document.getElementById('btn-cancel').addEventListener('click', () => {
+      window.electronSnip?.cancel();
+    });
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') window.electronSnip?.cancel();
+      if ((e.key === 'Enter' || e.key === 'Return') && rect.width > 10) {
+        window.electronSnip?.captureRegion(rect);
+      }
+    });
+  </script>
+</body>
+</html>
