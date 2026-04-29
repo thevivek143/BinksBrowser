@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Binks Browser — Fast. Clean. Yours.</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://code.iconify.design/3/3.1.0/iconify.min.js"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'sans-serif'] },
+          colors: {
+            gray: { 850: '#1f2937', 925: '#0f1218', 950: '#09090b' },
+            orange: { 450: '#f97316', 550: '#ea580c' }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: #050505; color: #f4f4f5; overflow-x: hidden; }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #050505; }
+    ::-webkit-scrollbar-thumb { background: #27272a; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #3f3f46; }
+
+    /* Animations */
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeInLeft {
+      from { opacity: 0; transform: translateX(-30px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes fadeInRight {
+      from { opacity: 0; transform: translateX(30px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      33% { transform: translateY(-8px) rotate(1deg); }
+      66% { transform: translateY(4px) rotate(-1deg); }
+    }
+    @keyframes pulse-glow {
+      0%, 100% { box-shadow: 0 0 20px rgba(249,115,22,0.15); }
+      50% { box-shadow: 0 0 40px rgba(249,115,22,0.3); }
+    }
+    @keyframes shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+    @keyframes border-rotate {
+      from { transform: translate(-50%,-50%) rotate(0deg); }
+      to { transform: translate(-50%,-50%) rotate(360deg); }
+    }
+    @keyframes orbit {
+      from { transform: rotate(0deg) translateX(140px) rotate(0deg); }
+      to { transform: rotate(360deg) translateX(140px) rotate(-360deg); }
+    }
+    @keyframes spin-slow {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    @keyframes typing {
+      from { width: 0; }
+      to { width: 100%; }
+    }
+    @keyframes blink-caret {
+      from, to { border-color: transparent; }
+      50% { border-color: #f97316; }
+    }
+
+    .animate-fade-in-up { animation: fadeInUp 0.7s ease-out forwards; opacity: 0; }
+    .animate-fade-in-left { animation: fadeInLeft 0.7s ease-out forwards; opacity: 0; }
+    .animate-fade-in-right { animation: fadeInRight 0.7s ease-out forwards; opacity: 0; }
+    .animate-float { animation: float 6s ease-in-out infinite; }
+    .animate-pulse-glow { animation: pulse-glow 3s ease-in-out infinite; }
+    .animate-shimmer {
+      background: linear-gradient(90deg, transparent 0%, rgba(249,115,22,0.08) 50%, transparent 100%);
+      background-size: 200% 100%;
+      animation: shimmer 3s linear infinite;
+    }
+    .animate-spin-slow { animation: spin-slow 20s linear infinite; }
+
+    .delay-100 { animation-delay: 0.1s; }
+    .delay-200 { animation-delay: 0.2s; }
+    .delay-300 { animation-delay: 0.3s; }
+    .delay-400 { animation-delay: 0.4s; }
+    .delay-500 { animation-delay: 0.5s; }
+    .delay-600 { animation-delay: 0.6s; }
+    .delay-700 { animation-delay: 0.7s; }
+    .delay-800 { animation-delay: 0.8s; }
+
+    /* Glass panel */
+    .glass-panel {
+      background: rgba(24,24,27,0.6);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    /* Hero glow */
+    .hero-glow {
+      position: absolute;
+      width: 800px;
+      height: 600px;
+      background: radial-gradient(ellipse, rgba(249,115,22,0.08) 0%, transparent 70%);
+      top: -100px;
+      left: 50%;
+      transform: translateX(-50%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Card hover */
+    .feature-card {
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+    .feature-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to bottom right, rgba(249,115,22,0.05), transparent);
+      opacity: 0;
+      transition: opacity 0.4s;
+    }
+    .feature-card:hover::before { opacity: 1; }
+    .feature-card:hover {
+      transform: translateY(-4px) scale(1.01);
+      border-color: rgba(249,115,22,0.3);
+      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+    }
+
+    /* Future card */
+    .future-card {
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+    }
+    .future-card:hover {
+      transform: translateY(-3px);
+      border-color: rgba(249,115,22,0.25);
+    }
+    .future-card .status-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      display: inline-block; margin-right: 8px;
+    }
+    .status-planned { background: #f97316; box-shadow: 0 0 8px rgba(249,115,22,0.5); }
+    .status-in-progress { background: #eab308; box-shadow: 0 0 8px rgba(234,179,8,0.5); animation: pulse-glow 2s infinite; }
+    .status-soon { background: #22c55e; box-shadow: 0 0 8px rgba(34,197,94,0.5); }
+
+    /* Rotating border */
+    .rotating-border {
+      position: relative;
+      overflow: hidden;
+      border-radius: 24px;
+    }
+    .rotating-border::before {
+      content: '';
+      position: absolute;
+      width: 200%;
+      height: 200%;
+      top: 50%; left: 50%;
+      background: conic-gradient(from 0deg, transparent 0 300deg, #f97316 360deg);
+      animation: border-rotate 4s linear infinite;
+      z-index: -1;
+    }
+    .rotating-border::after {
+      content: '';
+      position: absolute;
+      inset: 2px;
+      background: #0a0a0a;
+      border-radius: 22px;
+      z-index: -1;
+    }
+
+    /* Orbit dots */
+    .orbit-container { position: relative; width: 320px; height: 320px; }
+    .orbit-ring {
+      position: absolute;
+      border: 1px solid rgba(249,115,22,0.1);
+      border-radius: 50%;
+      top: 50%; left: 50%;
+      transform: translate(-50%,-50%);
+    }
+    .orbit-dot {
+      position: absolute;
+      width: 8px; height: 8px;
+      background: #f97316;
+      border-radius: 50%;
+      top: 50%; left: 50%;
+      box-shadow: 0 0 12px rgba(249,115,22,0.6);
+    }
+
+    /* Browser mockup */
+    .browser-mockup {
+      background: #18181b;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 25px 60px -12px rgba(0,0,0,0.7);
+    }
+    .browser-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 16px;
+      background: #0f0f12;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .browser-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .browser-url {
+      flex: 1;
+      margin-left: 8px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 6px;
+      padding: 6px 12px;
+      font-size: 12px;
+      color: #a1a1aa;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Navbar */
+    .navbar {
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      transition: all 0.3s;
+    }
+    .navbar.scrolled {
+      background: rgba(5,5,5,0.9);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+
+    /* Download button glow */
+    .btn-download {
+      position: relative;
+      overflow: hidden;
+    }
+    .btn-download::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent 60%);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .btn-download:hover::after { opacity: 1; }
+
+    /* Section observer */
+    .observe-section {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .observe-section.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Scroll progress */
+    .scroll-progress {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 2px;
+      background: linear-gradient(to right, #f97316, #ea580c);
+      z-index: 100;
+      transition: width 0.1s linear;
+    }
+
+    /* Typing effect */
+    .typing-text {
+      overflow: hidden;
+      white-space: nowrap;
+      border-right: 2px solid #f97316;
+      animation: typing 3s steps(30) 1s forwards, blink-caret 0.75s step-end infinite;
+      width: 0;
+    }
+
+    /* Toast notification */
+    .toast {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      padding: 14px 24px;
+      border-radius: 12px;
+      z-index: 200;
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    /* Mobile nav */
+    .mobile-nav {
+      transform: translateX(100%);
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .mobile-nav.open { transform: translateX(0); }
+
+    /* Stats counter */
+    .stat-number {
+      background: linear-gradient(to bottom, #f4f4f5, #a1a1aa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Scroll Progress Bar -->
+  <div class="scroll-progress" id="scrollProgress" style="width:0%"></div>
+
+  <!-- Toast -->
+  <div class="toast glass-panel text-sm text-zinc-300" id="toast">
+    <div class="flex items-center gap-2">
+      <span class="iconify text-green-400" data-icon="lucide:check-circle" data-width="16"></span>
+      <span id="toastMsg">Link copied!</span>
+    </div>
+  </div>
+
+  <!-- Mobile Nav Overlay -->
+  <div class="fixed inset-0 bg-black/60 z-40 hidden" id="mobileOverlay" onclick="closeMobileNav()"></div>
+
+  <!-- Mobile Nav -->
+  <div class="mobile-nav fixed top-0 right-0 h-full w-72 bg-zinc-950 border-l border-zinc-800/60 z-50 p-6 flex flex-col gap-6" id="mobileNav">
+    <div class="flex justify-between items-center">
+      <span class="text-lg font-semibold text-zinc-100">Menu</span>
+      <button onclick="closeMobileNav()" class="text-zinc-400 hover:text-zinc-200 transition-colors">
+        <span class="iconify" data-icon="lucide:x" data-width="22"></span>
+      </button>
+    </div>
+    <nav class="flex flex-col gap-4">
+      <a href="#features" onclick="closeMobileNav()" class="text-zinc-400 hover:text-zinc-200 transition-colors text-sm">Features</a>
+      <a href="#future" onclick="closeMobileNav()" class="text-zinc-400 hover:text-zinc-200 transition-colors text-sm">Roadmap</a>
+      <a href="#about" onclick="closeMobileNav()" class="text-zinc-400 hover:text-zinc-200 transition-colors text-sm">About</a>
+      <a href="https://github.com/thevivek143/BinksBrowser/releases" target="_blank" onclick="closeMobileNav()" class="flex items-center gap-2 bg-gradient-to-b from-orange-500 to-orange-600 text-white text-sm font-medium px-5 py-2.5 rounded-xl hover:from-orange-400 hover:to-orange-500 transition-all">
+        <span class="iconify" data-icon="lucide:download" data-width="16"></span>
+        Download
+      </a>
+    </nav>
+  </div>
+
+  <!-- Navbar -->
+  <nav class="navbar fixed top-0 left-0 right-0 z-30 px-6 py-4" id="navbar">
+    <div class="max-w-6xl mx-auto flex items-center justify-between">
+      <a href="#" class="flex items-center gap-3 group">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center shadow-lg shadow-orange-900/30 group-hover:shadow-orange-900/50 transition-shadow">
+          <span class="iconify text-white" data-icon="lucide:globe" data-width="18"></span>
+        </div>
+        <span class="text-lg font-semibold text-zinc-100 tracking-tight">Binks<span class="text-orange-500">Browser</span></span>
+      </a>
+
+      <div class="hidden md:flex items-center gap-8">
+        <a href="#features" class="text-sm text-zinc-400 hover:text-zinc-200 transition-colors duration-300">Features</a>
+        <a href="#future" class="text-sm text-zinc-400 hover:text-zinc-200 transition-colors duration-300">Roadmap</a>
+        <a href="#about" class="text-sm text-zinc-400 hover:text-zinc-200 transition-colors duration-300">About</a>
+        <a href="https://github.com/thevivek143/BinksBrowser" target="_blank" class="text-zinc-400 hover:text-zinc-200 transition-colors duration-300">
+          <span class="iconify" data-icon="lucide:github" data-width="18"></span>
+        </a>
+        <a href="https://github.com/thevivek143/BinksBrowser/releases" target="_blank"
+           class="btn-download flex items-center gap-2 bg-gradient-to-b from-orange-500 to-orange-600 text-white text-sm font-medium px-5 py-2 rounded-xl hover:from-orange-400 hover:to-orange-500 transition-all shadow-lg shadow-orange-900/20">
+          <span class="iconify" data-icon="lucide:download" data-width="15"></span>
+          Download
+        </a>
+      </div>
+
+      <button class="md:hidden text-zinc-400 hover:text-zinc-200" onclick="openMobileNav()">
+        <span class="iconify" data-icon="lucide:menu" data-width="22"></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="relative min-h-screen flex items-center justify-center pt-20 pb-16 px-6 overflow-hidden">
+    <div class="hero-glow"></div>
+
+    <!-- Background grid -->
+    <div class="absolute inset-0 opacity-[0.03]" style="background-image: linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px); background-size: 60px 60px;"></div>
+
+    <!-- Floating orbs -->
+    <div class="absolute top-1/4 left-[10%] w-2 h-2 bg-orange-500/40 rounded-full animate-float" style="animation-delay:0s"></div>
+    <div class="absolute top-1/3 right-[15%] w-1.5 h-1.5 bg-orange-400/30 rounded-full animate-float" style="animation-delay:2s"></div>
+    <div class="absolute bottom-1/3 left-[20%] w-1 h-1 bg-orange-500/50 rounded-full animate-float" style="animation-delay:4s"></div>
+    <div class="absolute bottom-1/4 right-[25%] w-2.5 h-2.5 bg-orange-500/20 rounded-full animate-float" style="animation-delay:1s"></div>
+
+    <div class="relative z-10 max-w-4xl mx-auto text-center">
+      <!-- Badge -->
+      <div class="animate-fade-in-up inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass-panel text-xs text-zinc-400 mb-8">
+        <span class="status-dot status-soon" style="margin:0;width:6px;height:6px"></span>
+        Open Source & Free Forever
+      </div>
+
+      <!-- Heading -->
+      <h1 class="animate-fade-in-up delay-100 text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.08] mb-6">
+        <span class="text-zinc-100">Browse the web</span><br>
+        <span class="bg-gradient-to-r from-orange-400 via-orange-500 to-orange-600 bg-clip-text text-transparent">your way.</span>
+      </h1>
+
+      <!-- Subtitle -->
+      <p class="animate-fade-in-up delay-200 text-base md:text-lg text-zinc-400 max-w-2xl mx-auto mb-10 leading-relaxed">
+        Binks Browser is a lightweight, privacy-first web browser built for speed and simplicity. No bloat. No tracking. Just you and the web.
+      </p>
+
+      <!-- CTA Buttons -->
+      <div class="animate-fade-in-up delay-300 flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
+        <a href="https://github.com/thevivek143/BinksBrowser/releases" target="_blank"
+           class="btn-download flex items-center gap-3 bg-gradient-to-b from-orange-500 to-orange-600 text-white text-sm font-medium px-8 py-3.5 rounded-2xl hover:from-orange-400 hover:to-orange-500 transition-all shadow-lg shadow-orange-900/30 hover:shadow-orange-900/50 hover:scale-105">
+          <span class="iconify" data-icon="lucide:download" data-width="18"></span>
+          Download for Free
+        </a>
+        <a href="https://github.com/thevivek143/BinksBrowser" target="_blank"
+           class="flex items-center gap-2 text-sm text-zinc-400 hover:text-zinc-200 glass-panel px-6 py-3.5 rounded-2xl hover:border-zinc-600 transition-all">
+          <span class="iconify" data-icon="lucide:github" data-width="17"></span>
+          View Source Code
+        </a>
+      </div>
+
+      <!-- Browser Mockup -->
+      <div class="animate-fade-in-up delay-500 max-w-2xl mx-auto animate-float" style="animation-duration:8s">
+        <div class="browser-mockup">
+          <div class="browser-bar">
+            <div class="browser-dot" style="background:#ef4444"></div>
+            <div class="browser-dot" style="background:#eab308"></div>
+            <div class="browser-dot" style="background:#22c55e"></div>
+            <div class="browser-url">
+              <span class="iconify text-zinc-500" data-icon="lucide:lock" data-width="12"></span>
+              binks://home
+            </div>
+          </div>
+          <div class="p-8 md:p-12 text-left" style="background: linear-gradient(135deg, #0a0a0a 0%, #111113 100%);">
+            <div class="flex items-center gap-3 mb-6">
+              <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500/20 to-orange-600/10 border border-orange-500/20 flex items-center justify-center">
+                <span class="iconify text-orange-500" data-icon="lucide:globe" data-width="20"></span>
+              </div>
+              <div>
+                <div class="text-sm font-medium text-zinc-200">Binks Browser</div>
+                <div class="text-xs text-zinc-500">v1.0 — Welcome</div>
+              </div>
+            </div>
+            <div class="space-y-3">
+              <div class="h-3 bg-zinc-800/60 rounded-full w-3/4"></div>
+              <div class="h-3 bg-zinc-800/40 rounded-full w-1/2"></div>
+              <div class="h-3 bg-zinc-800/30 rounded-full w-2/3"></div>
+            </div>
+            <div class="mt-6 grid grid-cols-3 gap-3">
+              <div class="h-16 rounded-xl bg-zinc-800/30 border border-zinc-700/30 flex items-center justify-center">
+                <span class="iconify text-zinc-600" data-icon="lucide:search" data-width="18"></span>
+              </div>
+              <div class="h-16 rounded-xl bg-zinc-800/30 border border-zinc-700/30 flex items-center justify-center">
+                <span class="iconify text-zinc-600" data-icon="lucide:bookmark" data-width="18"></span>
+              </div>
+              <div class="h-16 rounded-xl bg-zinc-800/30 border border-zinc-700/30 flex items-center justify-center">
+                <span class="iconify text-zinc-600" data-icon="lucide:settings" data-width="18"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Scroll indicator -->
+      <div class="animate-fade-in-up delay-700 mt-12 flex flex-col items-center gap-2 text-zinc-600">
+        <span class="text-xs">Scroll to explore</span>
+        <span class="iconify animate-bounce" data-icon="lucide:chevron-down" data-width="16"></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Stats Bar -->
+  <section class="relative border-y border-zinc-800/40 py-12 px-6">
+    <div class="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+      <div class="observe-section">
+        <div class="stat-number text-2xl md:text-3xl font-bold">100%</div>
+        <div class="text-xs text-zinc-500 mt-1">Free & Open Source</div>
+      </div>
+      <div class="observe-section" style="transition-delay:0.1s">
+        <div class="stat-number text-2xl md:text-3xl font-bold">0</div>
+        <div class="text-xs text-zinc-500 mt-1">Trackers Built-in</div>
+      </div>
+      <div class="observe-section" style="transition-delay:0.2s">
+        <div class="stat-number text-2xl md:text-3xl font-bold">Fast</div>
+        <div class="text-xs text-zinc-500 mt-1">Lightweight Engine</div>
+      </div>
+      <div class="observe-section" style="transition-delay:0.3s">
+        <div class="stat-number text-2xl md:text-3xl font-bold">Active</div>
+        <div class="text-xs text-zinc-500 mt-1">Development</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section id="features" class="relative py-24 md:py-32 px-6">
+    <div class="max-w-6xl mx-auto">
+      <!-- Section header -->
+      <div class="text-center mb-16 observe-section">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full glass-panel text-[10px] uppercase tracking-wider text-zinc-500 mb-4">
+          <span class="iconify text-orange-500" data-icon="lucide:sparkles" data-width="12"></span>
+          Features
+        </div>
+        <h2 class="text-2xl md:text-4xl font-bold tracking-tight text-zinc-100 mb-4">
+          Built different.<br class="md:hidden"> <span class="text-zinc-500">By design.</span>
+        </h2>
+        <p class="text-zinc-400 text-sm md:text-base max-w-lg mx-auto">Every feature in Binks Browser exists for a reason — to make your browsing faster, safer, and more enjoyable.</p>
+      </div>
+
+      <!-- Feature grid -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Feature 1 -->
+        <div class="feature-card glass-panel rounded-2xl p-6 observe-section">
+          <div class="w-11 h-11 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center mb-5">
+            <span class="iconify text-orange-500" data-icon="lucide:zap" data-width="20"></span>
+          </div>
+          <h3 class="text-base font-semibold text-zinc-100 mb-2">Lightweight & Fast</h3>
+          <p class="text-sm text-zinc-400 leading-relaxed">Minimal resource usage means Binks Browser runs smoothly even on older hardware. No unnecessary background processes eating your RAM.</p>
+        </div>
+
+        <!-- Feature 2 -->
+        <div class="feature-card glass-panel rounded-2xl p-6 observe-section" style="transition-delay:0.1s">
+          <div class="w-11 h-11 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center mb-5">
+            <span class="iconify text-orange-500" data-icon="lucide:shield-check" data-width="20"></span>
+          </div>
+          <h3 class="text-base font-semibold text-zinc-100 mb-2">Privacy-First</h3>
+          <p class="text-sm text-zinc-400 leading-relaxed">No telemetry, no data collection, no hidden trackers. Your browsing data stays on your machine — period.</p>
+        </div>
+
+        <!-- Feature 3 -->
+        <div class="feature-card glass-panel rounded-2xl p-6 observe-section" style="transition-delay:0.2s">
+          <div class="w-11 h-11 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center mb-5">
+            <span class="iconify text-orange-500" data-icon="lucide:palette" data-width="20"></span>
+          </div>
+          <h3 class="text-base font-semibold text-zinc-100 mb-2">Clean Interface</h3>
+          <p class="text-sm text-zinc-400 leading-relaxed">A clutter-free UI that puts the web front and center. No distracting toolbars or sponsored content — just a clean browsing experience.</p>
+        </div>
+
+        <!-- Feature 4 -->
+        <div class="feature-card glass-panel rounded-2xl p-6 observe-section" style="transition-delay:0.05s">
+          <div class="w-11 h-11 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center mb-5">
+            <span class="iconify text-orange-500" data-icon="lucide:code-2" data-width="20"></span>
+          </div>
+          <h3 class="text-base font-semibold text-zinc-100 mb-2">Open Source</h3>
+          <p class="text-sm text-zinc-400 leading-relaxed">Fully transparent codebase on GitHub. Inspect it, fork it, contribute to it. Built by the community, for the community.</p>
+        </div>
+
+        <!-- Feature 5 -->
+        <div class="feature-card glass-panel rounded-2xl p-6 observe-section" style="transition-delay:0.15s">
+          <div class="w-11 h-11 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center mb-5">
+            <span class="iconify text-orange-500" data-icon="lucide:layout-grid" data-width="20"></span>
+          </div>
+          <h3 class="text-base font-semibold text-zinc-100 mb-2">Tab Management</h3>
+          <p class="text-sm text-zinc-400 leading-relaxed">Efficient tab handling with visual previews. Organize your workflow without the chaos of 50+ open tabs slowing you down.</p>
+        </div>
+
+        <!-- Feature 6 -->
+        <div class="feature-card glass-panel rounded-2xl p-6 observe-section" style="transition-delay:0.25s">
+          <div class="w-11 h-11 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center mb-5">
+            <span class="iconify text-orange-500" data-icon="lucide:search" data-width="20"></span>
+          </div>
+          <h3 class="text-base font-semibold text-zinc-100 mb-2">Smart Search</h3>
+          <p class="text-sm text-zinc-400 leading-relaxed">Quick access to search right from the address bar. Supports multiple search engines so you can pick what works for you.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Roadmap / Future Section -->
+  <section id="future" class="relative py-24 md:py-32 px-6">
+    <!-- Background accent -->
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-orange-500/[0.03] rounded-full blur-[120px] pointer-events-none"></div>
+
+    <div class="relative max-w-6xl mx-auto">
+      <!-- Section header -->
+      <div class="text-center mb-16 observe-section">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full glass-panel text-[10px] uppercase tracking-wider text-zinc-500 mb-4">
+          <span class="iconify text-orange-500" data-icon="lucide:map" data-width="12"></span>
+          Roadmap
+        </div>
+        <h2 class="text-2xl md:text-4xl font-bold tracking-tight text-zinc-100 mb-4">
+          What's coming<span class="text-orange-500"> next.</span>
+        </h2>
+        <p class="text-zinc-400 text-sm md:text-base max-w-lg mx-auto">Binks Browser is actively evolving. Here's a look at features and improvements planned for future releases.</p>
+      </div>
+
+      <!-- Roadmap grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+
+        <!-- Roadmap Item 1 -->
+        <div class="future-card glass-panel rounded-2xl p-6 observe-section">
+          <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center text-xs font-medium">
+              <span class="status-dot status-in-progress"></span>
+              <span class="text-yellow-400">In Progress</span>
+            </div>
+            <span class="text-[10px] text-zinc-600 uppercase tracking-wider">v1.x</span>
+          </div>
+          <h3 class="text-base font-semibold text-zinc-100 mb-2">Ad Blocker Built-in</h3>
+          <p class="text-sm text-zinc-400 leading-relaxed">Native ad and tracker blocking without extensions. Block annoying ads, pop-ups, and malicious scripts out of the box.</p>
+        </div>
+
+        <!-- Roadmap Item 2 -->
+        <div class="future-card glass-panel rounded-2xl p-6 observe-section" style="transition-delay:0.1s">
+          <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center text-xs font-medium">
+              <span class="status-dot status-planned"></span>
+              <span class="text-orange-400">Planned</span>
+            </div>
+            <span class="text-[10px] text-zinc-600 uppercase tracking-wider">v2.0</span>
+          </div>
+          <h3 class="text-base font-semibold text-zinc-100 mb-2">Extension Support</h3>
+          <p class="text-sm text-zinc-400 leading-relaxed">Full extension/API support so users can install their favorite add-ons — from password managers to dev tools and beyond.</p>
+        </div>
+
+        <!-- Roadmap Item 3 -->
+        <div class="future-card glass-panel rounded-2xl p-6 observe-section" style="transition-delay:0.05s">
+          <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center text-xs font-medium">
+              <span class="status-dot status-planned"></span>
+              <span class="text-orange-400">Planned</span>
+            </div>
+            <span class="text-[10px] text-zinc-600 uppercase tracking-wider">v2.0</span>
+          </div>
+          <h3 class="text-base font-semibold text-zinc-100 mb-2">Themes & Customization</h3>
+          <p class="text-sm text-zinc-400 leading-relaxed">Dark mode, light mode, custom accent colors, and wallpaper support. Make Binks Browser truly yours with deep personalization.</p>
+        </div>
+
+        <!-- Roadmap Item 4 -->
+        <div class="future-card glass-panel rounded-2xl p-6 observe-section" style="transition-delay:0.15s">
+          <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center text-xs font-medium">
+              <span class="status-dot status-planned"></span>
+              <span class="text-orange-400">Planned</span>
+            </div>
+            <span class="text-[10px] text-zinc-600 uppercase tracking-wider">v2.x</span>
+          </div>
+          <h3 class="text-base font-semibold text-zinc-100 mb-2">Sync Across Devices</h3>
+          <p class="text-sm text-zinc-400 leading-relaxed">Bookmark, history, and settings sync across devices using encrypted, self-hosted or optional cloud solutions. Your data, your control.</p>
+        </div>
+
+        <!-- Roadmap Item 5 -->
+        <div class="future-card glass-panel rounded-2xl p-6 observe-section" style="transition-delay:0.1s">
+          <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center text-xs font-medium">
+              <span class="status-dot status-planned"></span>
+              <span class="text-orange-400">Planned</span>
+            </div>
+            <span class="text-[10px] text-zinc-600 uppercase tracking-wider">v3.0</span>
+          </div>
+          <h3 class="text-base font-semibold text-zinc-100 mb-2">VPN / Proxy Integration</h3>
+          <p class="text-sm text-zinc-400 leading-relaxed">Built-in VPN or proxy support for secure, private browsing on any network. No third-party software required.</p>
+        </div>
+
+        <!-- Roadmap Item 6 -->
+        <div class="future-card glass-panel rounded-2xl p-6 observe-section" style="transition-delay:0.2s">
+          <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center text-xs font-medium">
+              <span class="status-dot status-planned"></span>
+              <span class="text-orange-400">Planned</span>
+            </div>
+            <span class="text-[10px] text-zinc-600 uppercase tracking-wider">v3.x</span>
+          </div>
+          <h3 class="text-base font-semibold text-zinc-100 mb-2">AI-Powered Features</h3>
+          <p class="text-sm text-zinc-400 leading-relaxed">Smart page summaries, auto-categorization of bookmarks, and intelligent suggestions — all running locally on your device.</p>
+        </div>
+
+        <!-- Roadmap Item 7 -->
+        <div class="future-card glass-panel rounded-2xl p-6 observe-section" style="transition-delay:0.15s">
+          <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center text-xs font-medium">
+              <span class="status-dot status-planned"></span>
+              <span class="text-orange-400">Planned</span>
+            </div>
+            <span class="text-[10px] text-zinc-600 uppercase tracking-wider">v2.x</span>
+          </div>
+          <h3 class="text-base font-semibold text-zinc-100 mb-2">Split View & Workspaces</h3>
+          <p class="text-sm text-zinc-400 leading-relaxed">View two pages side-by-side and organize tabs into workspaces for research, work, or leisure — switch contexts instantly.</p>
+        </div>
+
+        <!-- Roadmap Item 8 -->
+        <div class="future-card glass-panel rounded-2xl p-6 observe-section" style="transition-delay:0.25s">
+          <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center text-xs font-medium">
+              <span class="status-dot status-planned"></span>
+              <span class="text-orange-400">Planned</span>
+            </div>
+            <span class="text-[10px] text-zinc-600 uppercase tracking-wider">Future</span>
+          </div>
+          <h3 class="text-base font-semibold text-zinc-100 mb-2">Mobile Version (Android)</h3>
+          <p class="text-sm text-zinc-400 leading-relaxed">Take Binks Browser on the go with a native Android version. Same speed, same privacy, same experience on mobile.</p>
+        </div>
+
+      </div>
+
+      <!-- Legend -->
+      <div class="flex items-center justify-center gap-6 mt-10 observe-section">
+        <div class="flex items-center gap-2 text-xs text-zinc-500">
+          <span class="status-dot status-in-progress" style="margin:0"></span> In Progress
+        </div>
+        <div class="flex items-center gap-2 text-xs text-zinc-500">
+          <span class="status-dot status-planned" style="margin:0"></span> Planned
+        </div>
+        <div class="flex items-center gap-2 text-xs text-zinc-500">
+          <span class="status-dot status-soon" style="margin:0"></span> Coming Soon
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- About / Tech Section -->
+  <section id="about" class="relative py-24 md:py-32 px-6">
+    <div class="max-w-6xl mx-auto">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16 items-center">
+
+        <!-- Left: Orbit visual -->
+        <div class="flex items-center justify-center observe-section">
+          <div class="orbit-container">
+            <!-- Rings -->
+            <div class="orbit-ring" style="width:160px;height:160px;"></div>
+            <div class="orbit-ring" style="width:240px;height:240px;"></div>
+            <div class="orbit-ring" style="width:320px;height:320px;"></div>
+
+            <!-- Center -->
+            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 rounded-2xl bg-gradient-to-br from-orange-500/20 to-orange-600/10 border border-orange-500/20 flex items-center justify-center z-10 animate-pulse-glow">
+              <span class="iconify text-orange-500" data-icon="lucide:globe" data-width="32"></span>
+            </div>
+
+            <!-- Orbiting dots -->
+            <div class="orbit-dot" style="animation: orbit 8s linear infinite;"></div>
+            <div class="orbit-dot" style="animation: orbit 12s linear infinite reverse; width:6px;height:6px;opacity:0.7;"></div>
+            <div class="orbit-dot" style="animation: orbit 16s linear infinite; width:10px;height:10px;opacity:0.4;"></div>
+          </div>
+        </div>
+
+        <!-- Right: Text -->
+        <div class="observe-section" style="transition-delay:0.15s">
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full glass-panel text-[10px] uppercase tracking-wider text-zinc-500 mb-4">
+            <span class="iconify text-orange-500" data-icon="lucide:info" data-width="12"></span>
+            About
+          </div>
+          <h2 class="text-2xl md:text-3xl font-bold tracking-tight text-zinc-100 mb-5">
+            Why Binks<span class="text-orange-500">?</span>
+          </h2>
+          <div class="space-y-4 text-sm text-zinc-400 leading-relaxed">
+            <p>
+              Binks Browser started as a personal project with a simple goal: build a browser that respects the user. In an era where every major browser is packed with telemetry, sponsored content, and hidden data collection, Binks takes a different approach.
+            </p>
+            <p>
+              Built with modern technologies and a focus on performance, Binks Browser strips away the unnecessary to deliver what matters most — <span class="text-zinc-200">a fast, clean, and private browsing experience</span>.
+            </p>
+            <p>
+              Being fully open source under GitHub, anyone can audit the code, report issues, or contribute features. It's a browser shaped by its community, not by corporate interests.
+            </p>
+          </div>
+
+          <!-- Tech tags -->
+          <div class="flex flex-wrap gap-2 mt-6">
+            <span class="px-3 py-1 rounded-full text-[11px] text-zinc-400 border border-zinc-800 bg-zinc-900/50">Open Source</span>
+            <span class="px-3 py-1 rounded-full text-[11px] text-zinc-400 border border-zinc-800 bg-zinc-900/50">Privacy</span>
+            <span class="px-3 py-1 rounded-full text-[11px] text-zinc-400 border border-zinc-800 bg-zinc-900/50">Lightweight</span>
+            <span class="px-3 py-1 rounded-full text-[11px] text-zinc-400 border border-zinc-800 bg-zinc-900/50">Cross-Platform</span>
+            <span class="px-3 py-1 rounded-full text-[11px] text-zinc-400 border border-zinc-800 bg-zinc-900/50">Community Driven</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Download CTA Section -->
+  <section class="relative py-24 md:py-32 px-6 overflow-hidden">
+    <!-- Background glow -->
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[300px] bg-orange-500/[0.06] rounded-full blur-[100px] pointer-events-none"></div>
+
+    <div class="relative max-w-3xl mx-auto text-center observe-section">
+      <div class="rotating-border p-px">
+        <div class="bg-[#0a0a0a] rounded-[22px] p-10 md:p-16">
+          <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center mx-auto mb-8 shadow-xl shadow-orange-900/30">
+            <span class="iconify text-white" data-icon="lucide:download" data-width="28"></span>
+          </div>
+
+          <h2 class="text-2xl md:text-4xl font-bold tracking-tight text-zinc-100 mb-4">
+            Ready to try<br><span class="text-orange-500">Binks Browser?</span>
+          </h2>
+          <p class="text-sm md:text-base text-zinc-400 max-w-md mx-auto mb-8 leading-relaxed">
+            Download the latest version for free. No sign-up, no account, no strings attached. Just download and start browsing.
+          </p>
+
+          <a href="https://github.com/thevivek143/BinksBrowser/releases" target="_blank"
+             class="btn-download inline-flex items-center gap-3 bg-gradient-to-b from-orange-500 to-orange-600 text-white text-sm font-medium px-10 py-4 rounded-2xl hover:from-orange-400 hover:to-orange-500 transition-all shadow-lg shadow-orange-900/30 hover:shadow-orange-900/50 hover:scale-105">
+            <span class="iconify" data-icon="lucide:download" data-width="18"></span>
+            Download Latest Release
+          </a>
+
+          <p class="text-xs text-zinc-600 mt-5 flex items-center justify-center gap-1.5">
+            <span class="iconify" data-icon="lucide:github" data-width="12"></span>
+            Available on GitHub Releases
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Contribute Section -->
+  <section class="relative py-16 px-6 border-t border-zinc-800/40">
+    <div class="max-w-4xl mx-auto observe-section">
+      <div class="glass-panel rounded-2xl p-8 md:p-10 flex flex-col md:flex-row items-center justify-between gap-6">
+        <div class="text-center md:text-left">
+          <h3 class="text-lg font-semibold text-zinc-100 mb-1">Want to contribute?</h3>
+          <p class="text-sm text-zinc-400">Binks Browser is open source — pull requests, issues, and ideas are always welcome.</p>
+        </div>
+        <div class="flex items-center gap-3 shrink-0">
+          <a href="https://github.com/thevivek143/BinksBrowser" target="_blank"
+             class="flex items-center gap-2 text-sm text-zinc-300 glass-panel px-5 py-2.5 rounded-xl hover:border-zinc-600 transition-all">
+            <span class="iconify" data-icon="lucide:github" data-width="16"></span>
+            Contribute
+          </a>
+          <button onclick="copyRepoLink()" class="flex items-center gap-2 text-sm text-zinc-400 hover:text-zinc-200 glass-panel px-4 py-2.5 rounded-xl hover:border-zinc-600 transition-all">
+            <span class="iconify" data-icon="lucide:copy" data-width="15"></span>
+            Copy Link
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="border-t border-zinc-800/40 py-10 px-6">
+    <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="w-7 h-7 rounded-lg bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center">
+          <span class="iconify text-white" data-icon="lucide:globe" data-width="14"></span>
+        </div>
+        <span class="text-sm font-medium text-zinc-400">Binks<span class="text-orange-500">Browser</span></span>
+      </div>
+      <div class="flex items-center gap-6">
+        <a href="https://github.com/thevivek143/BinksBrowser" target="_blank" class="text-zinc-500 hover:text-zinc-300 transition-colors">
+          <span class="iconify" data-icon="lucide:github" data-width="18"></span>
+        </a>
+        <a href="https://github.com/thevivek143/BinksBrowser/releases" target="_blank" class="text-zinc-500 hover:text-zinc-300 transition-colors">
+          <span class="iconify" data-icon="lucide:download" data-width="18"></span>
+        </a>
+      </div>
+      <p class="text-xs text-zinc-600">© 2025 Binks Browser. Open source under MIT License.</p>
+    </div>
+  </footer>
+
+  <script>
+    // Scroll progress bar
+    window.addEventListener('scroll', () => {
+      const scrollTop = document.documentElement.scrollTop;
+      const scrollHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+      const progress = (scrollTop / scrollHeight) * 100;
+      document.getElementById('scrollProgress').style.width = progress + '%';
+    });
+
+    // Navbar scroll effect
+    window.addEventListener('scroll', () => {
+      const navbar = document.getElementById('navbar');
+      if (window.scrollY > 50) {
+        navbar.classList.add('scrolled');
+      } else {
+        navbar.classList.remove('scrolled');
+      }
+    });
+
+    // Intersection Observer for section animations
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    }, {
+      threshold: 0.1,
+      rootMargin: '0px 0px -50px 0px'
+    });
+
+    document.querySelectorAll('.observe-section').forEach(el => observer.observe(el));
+
+    // Mobile nav
+    function openMobileNav() {
+      document.getElementById('mobileNav').classList.add('open');
+      document.getElementById('mobileOverlay').classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeMobileNav() {
+      document.getElementById('mobileNav').classList.remove('open');
+      document.getElementById('mobileOverlay').classList.add('hidden');
+      document.body.style.overflow = '';
+    }
+
+    // Copy repo link
+    function copyRepoLink() {
+      navigator.clipboard.writeText('https://github.com/thevivek143/BinksBrowser').then(() => {
+        showToast('Repository link copied!');
+      }).catch(() => {
+        showToast('Could not copy link');
+      });
+    }
+
+    // Toast notification
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      document.getElementById('toastMsg').textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2500);
+    }
+
+    // Smooth scroll for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function(e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    });
+  </script>
+</body>
+</html>
