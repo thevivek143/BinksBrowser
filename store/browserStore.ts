@@ -246,17 +246,18 @@ export const useBrowserStore = create<BrowserState>()(
       navigate: (url) => {
         const { activeTabId } = get();
         if (!url?.trim()) return;
-        const isNewTab = url === 'binks://newtab';
-        const processed = isNewTab ? url : /^https?:\/\//i.test(url) ? url : `https://${url}`;
+        const isInternal = url.startsWith('binks://');
+        const processed = isInternal ? url : /^https?:\/\//i.test(url) ? url : `https://${url}`;
 
         if (isElectron && electronAPI) {
-          if (isNewTab) {
-            // Hide the native view — show the React NewTabPage instead
+          if (isInternal) {
+            // Hide the native view — show the React page instead (New Tab, Settings, etc.)
             electronAPI.activateTab('none');
             set(s => ({
               tabs: s.tabs.map(t => t.id === activeTabId ? {
-                ...t, url: 'binks://newtab',
-                title: 'New Tab', isLoading: false, loadProgress: 0,
+                ...t, url: processed,
+                title: url === 'binks://settings' ? 'Settings' : 'New Tab', 
+                isLoading: false, loadProgress: 0,
                 favicon: '', // Preserve canGoBack/canGoForward so user can return to previous site
               } : t),
             }));
@@ -279,14 +280,14 @@ export const useBrowserStore = create<BrowserState>()(
         set(s => ({
           tabs: s.tabs.map(t => t.id === activeTabId ? {
             ...t, url: processed,
-            title: isNewTab ? 'New Tab' : processed.replace(/^https?:\/\//, '').split('/')[0],
-            isLoading: !isNewTab, loadProgress: isNewTab ? 0 : 15,
-            favicon: isNewTab ? '' : `https://www.google.com/s2/favicons?sz=32&domain=${processed}`,
-            canGoBack: !isNewTab,
+            title: isInternal ? (url === 'binks://settings' ? 'Settings' : 'New Tab') : processed.replace(/^https?:\/\//, '').split('/')[0],
+            isLoading: !isInternal, loadProgress: isInternal ? 0 : 15,
+            favicon: isInternal ? '' : `https://www.google.com/s2/favicons?sz=32&domain=${processed}`,
+            canGoBack: !isInternal,
           } : t),
         }));
 
-        if (!isNewTab) {
+        if (!isInternal) {
           setTimeout(() => {
             set(s => ({ tabs: s.tabs.map(t => t.id === activeTabId ? { ...t, loadProgress: 70 } : t) }));
             setTimeout(() => {
